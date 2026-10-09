@@ -1,0 +1,580 @@
+-- TGBFLICK RMH | NEON BLUE EDITION
+-- LocalScript: StarterPlayer > StarterPlayerScripts
+-- Intended for your own Roblox experience.
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local CYAN = Color3.fromRGB(0, 200, 255)
+local DARK = Color3.fromRGB(4, 10, 28)
+local PANEL = Color3.fromRGB(8, 24, 48)
+local MUTED = Color3.fromRGB(175, 195, 220)
+
+local old = playerGui:FindFirstChild("TGBFLICK_RMH")
+if old then old:Destroy() end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "TGBFLICK_RMH"
+gui.ResetOnSpawn = false
+gui.Parent = playerGui
+
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0.88, 0, 0.72, 0)
+main.Position = UDim2.new(0.06, 0, 0.14, 0)
+main.BackgroundColor3 = DARK
+main.Parent = gui
+
+local sizeLimit = Instance.new("UISizeConstraint")
+sizeLimit.MinSize = Vector2.new(280, 300)
+sizeLimit.MaxSize = Vector2.new(600, 520)
+sizeLimit.Parent = main
+
+local function corner(obj, radius)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, radius or 8)
+    c.Parent = obj
+end
+
+local function outline(obj)
+    local s = Instance.new("UIStroke")
+    s.Color = CYAN
+    s.Thickness = 1
+    s.Parent = obj
+end
+
+corner(main, 12)
+outline(main)
+
+local top = Instance.new("TextLabel")
+top.Size = UDim2.new(1, -45, 0, 38)
+top.Position = UDim2.fromOffset(10, 0)
+top.BackgroundTransparency = 1
+top.Text = "TGBFLICK RMH | NEON BLUE"
+top.TextColor3 = CYAN
+top.TextSize = 15
+top.Font = Enum.Font.GothamBold
+top.TextXAlignment = Enum.TextXAlignment.Left
+top.Parent = main
+
+local minimize = Instance.new("TextButton")
+minimize.Size = UDim2.fromOffset(32, 30)
+minimize.Position = UDim2.new(1, -38, 0, 4)
+minimize.Text = "-"
+minimize.TextColor3 = CYAN
+minimize.BackgroundColor3 = PANEL
+minimize.Font = Enum.Font.GothamBold
+minimize.TextSize = 20
+minimize.Parent = main
+corner(minimize, 6)
+
+local sidebar = Instance.new("ScrollingFrame")
+sidebar.Size = UDim2.new(0.32, -8, 1, -50)
+sidebar.Position = UDim2.fromOffset(8, 42)
+sidebar.BackgroundColor3 = PANEL
+sidebar.BorderSizePixel = 0
+sidebar.ScrollBarThickness = 3
+sidebar.CanvasSize = UDim2.new()
+sidebar.AutomaticCanvasSize = Enum.AutomaticSize.Y
+sidebar.Parent = main
+corner(sidebar, 8)
+
+local sideLayout = Instance.new("UIListLayout")
+sideLayout.Padding = UDim.new(0, 5)
+sideLayout.Parent = sidebar
+
+local body = Instance.new("ScrollingFrame")
+body.Size = UDim2.new(0.68, -12, 1, -50)
+body.Position = UDim2.new(0.32, 4, 0, 42)
+body.BackgroundColor3 = PANEL
+body.BorderSizePixel = 0
+body.ScrollBarThickness = 4
+body.CanvasSize = UDim2.new()
+body.AutomaticCanvasSize = Enum.AutomaticSize.Y
+body.Parent = main
+corner(body, 8)
+
+local bodyLayout = Instance.new("UIListLayout")
+bodyLayout.Padding = UDim.new(0, 7)
+bodyLayout.Parent = body
+
+local bodyPadding = Instance.new("UIPadding")
+bodyPadding.PaddingTop = UDim.new(0, 8)
+bodyPadding.PaddingLeft = UDim.new(0, 6)
+bodyPadding.PaddingRight = UDim.new(0, 6)
+bodyPadding.Parent = body
+
+local function notify(message)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = "TGBFLICK RMH",
+            Text = message,
+            Duration = 3
+        })
+    end)
+end
+
+local function label(parent, text, size, position, fontSize)
+    local l = Instance.new("TextLabel")
+    l.Size = size
+    l.Position = position
+    l.BackgroundTransparency = 1
+    l.Text = text
+    l.TextColor3 = MUTED
+    l.TextSize = fontSize or 11
+    l.Font = Enum.Font.Gotham
+    l.TextWrapped = true
+    l.TextXAlignment = Enum.TextXAlignment.Left
+    l.Parent = parent
+    return l
+end
+
+local function feature(text, description, callback, parent)
+    parent = parent or body
+
+    local card = Instance.new("Frame")
+    card.Size = UDim2.new(1, -4, 0, 78)
+    card.BackgroundColor3 = Color3.fromRGB(8, 24, 48)
+    card.Parent = parent
+    corner(card, 8)
+    outline(card)
+
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1, -12, 0, 34)
+    b.Position = UDim2.fromOffset(6, 5)
+    b.BackgroundColor3 = Color3.fromRGB(15, 35, 70)
+    b.TextColor3 = CYAN
+    b.Text = text
+    b.TextSize = 11
+    b.TextWrapped = true
+    b.Font = Enum.Font.GothamBold
+    b.Parent = card
+    corner(b, 6)
+
+    local desc = label(
+        card,
+        description,
+        UDim2.new(1, -16, 0, 30),
+        UDim2.fromOffset(8, 42),
+        10
+    )
+    desc.TextYAlignment = Enum.TextYAlignment.Top
+
+    b.Activated:Connect(function()
+        if callback then callback(b) end
+    end)
+
+    return b, card
+end
+
+local function toggle(text, description, initial, callback)
+    local value = initial
+    local b
+
+    b = feature(
+        text .. ": " .. (value and "ON" or "OFF"),
+        description,
+        function()
+            value = not value
+            b.Text = text .. ": " .. (value and "ON" or "OFF")
+            b.BackgroundColor3 = value
+                and Color3.fromRGB(0, 75, 120)
+                or Color3.fromRGB(15, 35, 70)
+
+            if callback then
+                callback(value)
+            end
+        end
+    )
+
+    return b
+end
+
+local function clearBody()
+    for _, child in ipairs(body:GetChildren()) do
+        if child:IsA("GuiObject") and child ~= bodyLayout
+            and child ~= bodyPadding then
+            child:Destroy()
+        end
+    end
+end
+
+local function getHumanoid()
+    local character = player.Character
+    return character and character:FindFirstChildOfClass("Humanoid")
+end
+
+local function getRoot()
+    local character = player.Character
+    return character and character:FindFirstChild("HumanoidRootPart")
+end
+
+local currentPage = "General"
+local selectedPlayer = nil
+local espEnabled = false
+local flyEnabled = false
+local idleEnabled = false
+local flySpeed = 45
+local flyConnection
+local flyVelocity
+local flyGyro
+local idleConnection
+local highlights = {}
+local savedWalkSpeed = 16
+local savedJumpPower = 50
+
+local function clearESP()
+    for target, highlight in pairs(highlights) do
+        if highlight then highlight:Destroy() end
+        highlights[target] = nil
+    end
+end
+
+local function updateESP()
+    clearESP()
+    if not espEnabled then return end
+
+    for _, target in ipairs(Players:GetPlayers()) do
+        if target ~= player and target.Character then
+            local h = Instance.new("Highlight")
+            h.Name = "TGBFLICK_ESP"
+            h.FillColor = Color3.fromRGB(0, 170, 255)
+            h.OutlineColor = CYAN
+            h.FillTransparency = 0.55
+            h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            h.Adornee = target.Character
+            h.Parent = gui
+            highlights[target] = h
+        end
+    end
+end
+
+local function stopFly()
+    flyEnabled = false
+
+    if flyConnection then
+        flyConnection:Disconnect()
+        flyConnection = nil
+    end
+
+    if flyVelocity then
+        flyVelocity:Destroy()
+        flyVelocity = nil
+    end
+
+    if flyGyro then
+        flyGyro:Destroy()
+        flyGyro = nil
+    end
+
+    local hum = getHumanoid()
+    if hum then hum.PlatformStand = false end
+end
+
+local function startFly()
+    local root = getRoot()
+    local hum = getHumanoid()
+
+    if not root or not hum then
+        notify("Character is not ready.")
+        return
+    end
+
+    stopFly()
+    flyEnabled = true
+    hum.PlatformStand = true
+
+    flyVelocity = Instance.new("BodyVelocity")
+    flyVelocity.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+    flyVelocity.Velocity = Vector3.zero
+    flyVelocity.Parent = root
+
+    flyGyro = Instance.new("BodyGyro")
+    flyGyro.MaxTorque = Vector3.new(1e6, 1e6, 1e6)
+    flyGyro.P = 10000
+    flyGyro.CFrame = root.CFrame
+    flyGyro.Parent = root
+
+    flyConnection = RunService.RenderStepped:Connect(function()
+        if not flyEnabled or not root.Parent then
+            stopFly()
+            return
+        end
+
+        local camera = workspace.CurrentCamera
+        local move = hum.MoveDirection
+        local vertical = 0
+
+        if hum.Jump then vertical = vertical + 1 end
+
+        flyVelocity.Velocity =
+            (move * flySpeed) + Vector3.new(0, vertical * flySpeed, 0)
+
+        if camera then
+            flyGyro.CFrame = camera.CFrame
+        end
+    end)
+end
+
+local function stopIdleMonitor()
+    idleEnabled = false
+    if idleConnection then
+        idleConnection:Disconnect()
+        idleConnection = nil
+    end
+end
+
+local function startIdleMonitor()
+    stopIdleMonitor()
+    idleEnabled = true
+
+    local lastPosition
+    idleConnection = RunService.Heartbeat:Connect(function()
+        if not idleEnabled then return end
+
+        local root = getRoot()
+        if root then
+            lastPosition = root.Position
+        end
+    end)
+
+    notify("Idle monitor enabled.")
+end
+
+local function showPlayerList()
+    local list = Instance.new("Frame")
+    list.Size = UDim2.new(1, -4, 0, 220)
+    list.BackgroundColor3 = DARK
+    list.Parent = body
+    corner(list, 8)
+    outline(list)
+
+    label(
+        list,
+        "Choose a player (selection only)",
+        UDim2.new(1, -12, 0, 24),
+        UDim2.fromOffset(6, 4),
+        11
+    )
+
+    local scroll = Instance.new("ScrollingFrame")
+    scroll.Size = UDim2.new(1, -12, 1, -34)
+    scroll.Position = UDim2.fromOffset(6, 30)
+    scroll.BackgroundTransparency = 1
+    scroll.BorderSizePixel = 0
+    scroll.ScrollBarThickness = 3
+    scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    scroll.CanvasSize = UDim2.new()
+    scroll.Parent = list
+
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 4)
+    layout.Parent = scroll
+
+    for _, target in ipairs(Players:GetPlayers()) do
+        if target ~= player then
+            local b = Instance.new("TextButton")
+            b.Size = UDim2.new(1, -4, 0, 30)
+            b.BackgroundColor3 = PANEL
+            b.TextColor3 = CYAN
+            b.Text = target.DisplayName .. "  (@" .. target.Name .. ")"
+            b.TextSize = 10
+            b.Font = Enum.Font.Gotham
+            b.Parent = scroll
+            corner(b, 5)
+
+            b.Activated:Connect(function()
+                selectedPlayer = target
+                notify("Selected " .. target.Name)
+            end)
+        end
+    end
+end
+
+local function showPage(page)
+    currentPage = page
+    clearBody()
+
+    if page == "General" then
+        feature("Refresh ESP", "Refresh player outlines when ESP is enabled.", function()
+            updateESP()
+            notify("ESP refreshed.")
+        end)
+
+        feature("Reset Character", "Respawn your character in this experience.", function()
+            local hum = getHumanoid()
+            if hum then hum.Health = 0 end
+        end)
+
+        feature("Selected Player", "Open a list and select another player.", function()
+            showPlayerList()
+        end)
+
+    elseif page == "Murderer" then
+        feature("Murderer Tools", "Role detection must be implemented by the game developer using trusted server role data.", function()
+            notify("Connect this to your game's server role system.")
+        end)
+
+    elseif page == "Sheriff" then
+        feature("Sheriff Tools", "Sheriff status and weapon actions must use your game's server-authorized systems.", function()
+            notify("Connect this to your game's sheriff system.")
+        end)
+
+    elseif page == "ESP" then
+        toggle("Player ESP", "Show outlines around other players in your own experience.", espEnabled, function(value)
+            espEnabled = value
+            updateESP()
+        end)
+
+        feature("Clear ESP", "Remove all player outlines.", function()
+            espEnabled = false
+            clearESP()
+            showPage("ESP")
+        end)
+
+    elseif page == "Local Player" then
+        toggle("Fast Walk", "ON sets WalkSpeed to 28; OFF restores the default 16.", false, function(value)
+            local hum = getHumanoid()
+            if hum then hum.WalkSpeed = value and 28 or 16 end
+        end)
+
+        toggle("High Jump", "ON raises jump power to 75; OFF restores 50.", false, function(value)
+            local hum = getHumanoid()
+            if hum then
+                hum.UseJumpPower = true
+                hum.JumpPower = value and 75 or 50
+            end
+        end)
+
+        toggle("Fly", "Move with the normal movement controls while flying; jump to rise.", flyEnabled, function(value)
+            if value then startFly() else stopFly() end
+        end)
+
+        feature("Stop Flying", "Turn off flight and restore normal character movement.", function()
+            stopFly()
+            showPage("Local Player")
+        end)
+
+    elseif page == "Fling Player" then
+        feature("Select Player", "Choose a player for your own game's permitted interaction systems.", function()
+            showPlayerList()
+        end)
+
+        feature("Player Selection Info", "This menu selects a player only. It does not fling or disrupt other players.", function()
+            notify(selectedPlayer and ("Selected: " .. selectedPlayer.Name) or "Select a player first.")
+        end)
+
+    elseif page == "Aim" then
+        feature("Aim Settings", "Aim features are not enabled here. Use fair, server-approved mechanics in your own game.", function()
+            notify("No aim automation is attached.")
+        end)
+
+    elseif page == "Teleports" then
+        feature("Go to Spawn", "Teleport your character to a SpawnLocation in your own experience.", function()
+            local root = getRoot()
+            local spawnLocation = workspace:FindFirstChildWhichIsA("SpawnLocation", true)
+
+            if root and spawnLocation then
+                root.CFrame = spawnLocation.CFrame + Vector3.new(0, 4, 0)
+            else
+                notify("No SpawnLocation found.")
+            end
+        end)
+
+    elseif page == "Farm" then
+        toggle("Idle Monitor", "Enable or disable a basic character-position monitor.", idleEnabled, function(value)
+            if value then startIdleMonitor() else stopIdleMonitor() end
+        end)
+
+        feature("Scan Coins", "Count coin-named objects in Workspace; this does not collect them.", function()
+            local count = 0
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if string.find(string.lower(obj.Name), "coin", 1, true) then
+                    count = count + 1
+                end
+            end
+            notify("Found " .. count .. " coin-named objects.")
+        end)
+
+    elseif page == "Settings" then
+        feature("Refresh Menu", "Rebuild the current page.", function()
+            showPage(currentPage)
+        end)
+
+        feature("Close Menu", "Hide the menu. Use the reopen button to show it again.", function()
+            main.Visible = false
+        end)
+    end
+end
+
+local pages = {
+    "General", "Murderer", "Sheriff", "ESP",
+    "Local Player", "Fling Player", "Aim",
+    "Teleports", "Farm", "Settings"
+}
+
+for _, page in ipairs(pages) do
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1, -8, 0, 32)
+    b.Position = UDim2.fromOffset(4, 0)
+    b.BackgroundColor3 = DARK
+    b.TextColor3 = CYAN
+    b.Text = page
+    b.TextSize = 10
+    b.Font = Enum.Font.GothamBold
+    b.Parent = sidebar
+    corner(b, 6)
+
+    b.Activated:Connect(function()
+        showPage(page)
+    end)
+end
+
+local reopen = Instance.new("TextButton")
+reopen.Size = UDim2.fromOffset(115, 36)
+reopen.Position = UDim2.new(0, 10, 0.5, -18)
+reopen.BackgroundColor3 = DARK
+reopen.TextColor3 = CYAN
+reopen.Text = "OPEN TGBFLICK"
+reopen.TextSize = 10
+reopen.Font = Enum.Font.GothamBold
+reopen.Visible = false
+reopen.Parent = gui
+corner(reopen, 8)
+outline(reopen)
+
+minimize.Activated:Connect(function()
+    main.Visible = false
+    reopen.Visible = true
+end)
+
+reopen.Activated:Connect(function()
+    main.Visible = true
+    reopen.Visible = false
+end)
+
+Players.PlayerAdded:Connect(function()
+    if espEnabled then updateESP() end
+end)
+
+Players.PlayerRemoving:Connect(function(target)
+    if highlights[target] then
+        highlights[target]:Destroy()
+        highlights[target] = nil
+    end
+
+    if selectedPlayer == target then
+        selectedPlayer = nil
+    end
+end)
+
+player.CharacterAdded:Connect(function()
+    task.wait(1)
+    if espEnabled then updateESP() end
+end)
+
+showPage("General")
+notify("Neon Blue menu loaded.")
